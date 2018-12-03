@@ -1,0 +1,34 @@
+                         rdp-tool使用说明书
+本工具是作用是用来验证RDP系统获取binlog流后解析event，写入kafka之后，在kafka中数据是否保持连续性，并且可以找出主从节点切换，重启等信息。
+
+查看输入帮助信息：
+[xxxx@paxos1-9drjg src]$ ./rdp-tool
+
+
+
+Usage: ./rdp-tool [-p<partition>] [-o<offset>] [-b<host1:port1,host2:port2,..>] -t<topic>
+
+librdkafka version 0.11.0-RC1 (0x000b00c9)
+
+ Options:
+  -p <num>       Use partitioner:
+                 default: RdKafka::Topic::PARTITION_UA
+  -o <offset>     Start offset (consumer)
+                  default: RdKafka::Topic::OFFSET_BEGINNING
+  -b <brokers>    Broker address (localhost:9092)
+  -t <topic>      Topic to fetch
+
+运行程序：
+
+[xxxx@paxos1-9drjg src]$./rdp-tool -p0 -o1000000 -b192.168.0.2:9092,192.168.0.3:9092,192.168.0.4:9092 -tmy-topic0
+
+
+注意：1.-p, -o, -b与后面参数之间不能有空格
+      2.offset如果设置小于kafka的初始offset是不能消费数据的，第一次运行时最好不输入offset参数，程序默认会从kafka最开始offset开始消费
+       
+
+fulltopiclog开头的日志为csv格式，保存着所有的消费信息， 可以用excel打开。
+rdp-tool.INFO日志为简略信息，可以查看连续性情况以及发现错误信息
+
+
+

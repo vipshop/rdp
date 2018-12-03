@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>rdp.com</groupId>
+    <artifactId>rdp_examples</artifactId>
+    <packaging>pom</packaging>
+    <version>0.0.1</version>
+
+    <modules>
+        <module>rdp_convert</module>
+        <module>kafka_0_8_example</module>
+        <!--
+        <module>kafka_0_10_example</module>
+        -->
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sdk.version>0.0.1</sdk.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- https://mvnrepository.com/artifact/com.codahale.metrics/metrics-core -->
+            <dependency>
+                <groupId>rdp.com</groupId>
+                <artifactId>rdp_convert</artifactId>
+                <version>${sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rdp.com</groupId>
+                <artifactId>kafka_0_8_example</artifactId>
+                <version>${sdk.version}</version>
+            </dependency>
+            <!--
+            <dependency>
+                <groupId>rdp.com</groupId>
+                <artifactId>kafka_0_10_example</artifactId>
+                <version>${sdk.version}</version>
+            </dependency>
+            -->
+        </dependencies>
+    </dependencyManagement>
+
+</project>

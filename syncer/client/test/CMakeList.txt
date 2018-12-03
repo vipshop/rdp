@@ -1,0 +1,112 @@
+# Copyright (c) 2006, 2015, Oracle and/or its affiliates. All rights reserved.
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+set(DEPS_DIR ${MYSQL_CMAKE_SCRIPT_DIR}/../client/deps)
+
+INCLUDE_DIRECTORIES(
+  ${CMAKE_SOURCE_DIR}/client
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/mysys_ssl
+  ${ZLIB_INCLUDE_DIR}
+  ${LZ4_INCLUDE_DIR}
+  ${SSL_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/libmysql
+  ${CMAKE_SOURCE_DIR}/libbinlogevents/include
+  ${CMAKE_SOURCE_DIR}/regex
+  ${CMAKE_SOURCE_DIR}/strings
+  ${EDITLINE_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${DEPS_DIR}/boost/include
+  ${DEPS_DIR}/glog/include
+  ${DEPS_DIR}/librdkafka/include
+  ${DEPS_DIR}/jansson/include
+  ${DEPS_DIR}/librdp_message/include
+  ${DEPS_DIR}/zklib/include
+  ${DEPS_DIR}/protobuf/include
+  ${DEPS_DIR}/rdp-comm/include/rdp-comm
+  ${DEPS_DIR}/gtest/include
+  ${DEPS_DIR}/gflags/include
+)
+
+INCLUDE(${MYSQL_CMAKE_SCRIPT_DIR}/compile_flags.cmake)
+
+## Subdirectory with common client code.
+ADD_SUBDIRECTORY(base)
+
+## We will need libeay32.dll and ssleay32.dll when running client executables.
+COPY_OPENSSL_DLLS(copy_openssl_client)
+
+INCLUDE(${MYSQL_CMAKE_SCRIPT_DIR}/compile_flags.cmake)
+
+ADD_DEFINITIONS(${SSL_DEFINES})
+ADD_DEFINITIONS("-DDBUG_OFF -DHAVE_REPLICATION -DDISABLE_ALL_PSI -DSLAVE -DGTest")
+
+MYSQL_ADD_EXECUTABLE(rdp_syncer 
+    ./test/test_client_main.cc
+    ./test/test_monitor_report.h
+    ./test/test_monitor_report.cc
+	signal_handler.cc
+	syncer_slave.cc
+	syncer_app.cc
+	logger.cc
+    syncer_utils.cc
+	syncer_conf.cc
+	binlog_writer.cc
+	binlog_reader.cc
+	syncer_main.h
+	signal_handler.h
+	syncer_slave.h
+	syncer_app.h
+	logger.h
+	syncer_utils.h
+	syncer_conf.h
+	binlog_writer.h
+	binlog_reader.h
+	syncer_consts.h
+	syncer_incl.h
+)
+ADD_COMPILE_FLAGS(
+syncer_main.cc 
+  COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/sql" "-DHAVE_REPLICATION" "-DDISABLE_PSI_MUTEX"
+)
+
+MYSQL_ADD_EXECUTABLE(test_schema_store
+  ./test/
+)
+
+#link_directories(/usr/local/glog/lib glog)
+#link_directories(/usr/local/librdkafka-0.9.5/lib rdkafka++)
+#link_directories(/usr/local/librdkafka-0.9.5/lib rdkafka)
+#link_directories(/usr/local/jansson-2.10/lib jansson)
+#link_directories(/usr/local/librdp_message-1.0.0/lib rdp_message)
+#link_directories(/usr/local/boost_1_59_0/lib boost_system)
+#link_directories(/usr/local/boost_1_59_0/lib boost_thread)
+
+TARGET_LINK_LIBRARIES(rdp_syncer mysqlclient binlogevents_static curl
+    ${DEPS_DIR}/glog/lib/libglog.so 
+    ${DEPS_DIR}/boost/lib/libboost_system.so 
+    ${DEPS_DIR}/boost/lib/libboost_thread.so 
+    ${DEPS_DIR}/jansson/lib/libjansson.so 
+    ${DEPS_DIR}/librdkafka/lib/librdkafka++.so 
+    ${DEPS_DIR}/librdkafka/lib/librdkafka.so 
+    ${DEPS_DIR}/zklib/lib/libzookeeper_mt.so 
+    ${DEPS_DIR}/protobuf/lib/libprotobuf.so 
+    ${DEPS_DIR}/librdp_message/lib/librdp_message.so
+    ${DEPS_DIR}/rdp-comm/lib/librdp-comm.so
+    ${DEPS_DIR}/gtest/lib/libgtest.a
+    ${DEPS_DIR}/gflags/lib/libgflags.so
+)
+
+ADD_DEFINITIONS(-DHAVE_DLOPEN)
