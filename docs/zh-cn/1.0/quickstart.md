@@ -32,12 +32,12 @@ RDP系统架构图如下：
 
 ## 3. 接入要求
 
-1.MySQL版本要求>=5.7.19, MariaDB>=10.0.21
-2.确保开始GTID
-3.确保开启Row格式binlog
-4.确保BINLOG_FORMAT为ROW格式
-5.确保BINLOG_ROW_IMAGE为FULL
-6.提供如下权限的用户:
+1. MySQL版本要求>=5.7.19, MariaDB>=10.0.21
+2. 确保开始GTID
+3. 确保开启Row格式binlog
+4. 确保BINLOG_FORMAT为ROW格式
+5. 确保BINLOG_ROW_IMAGE为FULL
+6. 提供如下权限的用户:
 ```
 GRANT SELECT, PROCESS, REPLICATION SLAVE, REPLICATION CLIENT, SHOW VIEW, EVENT ON *.* TO 'rdp'@'10.%' identified  by  ...;
 ```
@@ -49,5 +49,6 @@ GRANT SELECT, PROCESS, REPLICATION SLAVE, REPLICATION CLIENT, SHOW VIEW, EVENT O
 docker run -it firnsan/rdp
 ```
 容器中已经包含RDP的二进制程序，路径在/apps/svr/rdp_syncer/base下。
+
 进入容器后，参照[部署文档](./rdp-deployment.md)中2.3和2.4小节，修改配置文件后启动进程。
 
