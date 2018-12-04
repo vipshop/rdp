@@ -1,5 +1,4 @@
 
-
 ## RDP
 
 ![logo](docs/rdp-logo.png)
@@ -32,4 +31,5 @@ RDP的全称是Real-Time Data Pipeline，是一个从MySQL同步数据到Kafka�
 * 简怀兵
 * 陈世旺
 
-[DOCS:  1.0](../../blob/master/docs/_sidebar.md)
+## 帮助文档
+[点击查看](../../blob/master/docs/_sidebar.md)
