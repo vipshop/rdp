@@ -1,75 +1,69 @@
-# RDP 部署流程
+# RDP 安装部署流程
 
-## 1. RDP Syncer编译部署
+## 1. RDP编译
 
-下载源码：
-
-```
-git clone **********.git ./rdp
-cd ./rdp
-```
-
-编译源码：
+执行以下命令，下载源码并编译:
 
 ```
-make
-# 可执行文件包在package目录下
+git clone https://github.com/vipshop/rdp.git
+cd rdp
+make && make install
+```
+
+可执行文件包在package目录下:
+```
 ls package/
-rdp_mysql.20180822.tgz  syncer
+rdp_mysql.20180822.tgz
 ```
 
-2. RDP部署流程
+
+## 2. RDP部署
 
 RDP系统架构图如下：
 
 ![system_struct](../1.0/pictures/system_struct.png)
 
-从架构图可以看出，RDP依赖Zookeeper集群、Kafka集群、Schema Store数据库实例、Execute DB数据库实例。其中Execute DB数据库版本最好与数据源数据库版本一致（因为Execute DB需要回放DDL），与Schema Store数据库版本可以不同。Schema Store与Execute DB公用一个数据库实例。
+从架构图可以看出，RDP依赖Zookeeper集群、Kafka集群、Schema Store数据库实例、Execute DB数据库实例。其中Execute DB数据库版本最好与数据源数据库版本一致（因为Execute DB需要回放DDL），与Schema Store数据库版本可以不同。Schema Store与Execute DB可以**共用**一个数据库实例。
 
-还需要部署RDP系统架构图中不体现的监控上报模块（InfluxDB+grafana+filebeat）
 
-以下部署流程不包含Zookeeper、Kafka、数据库部（Schema Store/Execute DB）署流程。
+这里以如下所述环境为例，进行部署演示：
+* RDP版本：rdp_mysql.20180822
+* RDP实例ID：10001 
+* 源数据库版本：mysql-5.7.22 
+* 源数据库IP:127.0.0.1, Port:3306, User:\*\*\*, Passwd:\*\*\* 
+* Schema Store/Execute DB IP:127.0.0.1, Port:10001, User:\*\*\*, Passwd:\*\*\* 
+* Zookeeper集群：192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181 
+* Kafka集群：192.168.0.1:9092,192.168.0.2:9092,192.168.0.3:9092
+* Kafka Topic：topic_10001，Partition:0
 
-以下以ID：10001，源数据库版本：mysql-5.7.22，源数据库IP:127.0.0.1、Port:3306、User:\*\*\*、Passwd:\*\*\*，Schema Store/Execute DB IP:127.0.0.1、Port:10001、User:\*\*\*、Passwd:\*\*\*，Zookeeper集群：192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181、Kafka集群：192.168.0.1:9092,192.168.0.2:9092,192.168.0.3:9092和MySQL部署流程这里不做描述，Kafka Topic：topic_10001，Partition:0，MySQL用户\*\*\*所需要的权限在[快速开始](./quickstart.md)中。
+> 这里的部署流程不包含Zookeeper、Kafka、数据库（Schema Store/Execute DB）部署流程，需要提前准备
 
 下面以上述环境作为例子进行部署说明：
 
-**安装MySQL Client**
+### 2.1 安装MySQL Client
 
 ```
 sudo yum install -y mysql
 ```
 
-**创建目录**
+
+### 2.2 解压安装包
+
+拷贝RDP安装包至/apps/svr/rdp_syncer/base, 并解压:
 
 ```
-#创建RDP运行目录
 mkdir -p /apps/svr/rdp_syncer/base
-#创建RDP配置数据目录
-mkdir -p /apps/svr/rdp_syncer/data/10001/conf
-#创建RDP日志数据目录
-mkdir -p /apps/svr/rdp_syncer/data/10001/logs
-#创建RDP Binlog Dump数据目录
-mkdir -p /apps/svr/rdp_syncer/data/10001/binlogs
-#创建RDP监控数据目录
-mkdir -p /apps/svr/rdp_syncer/data/10001/metrics
+mkdir rdp_mysql.20180822 && tar zxvf rdp_mysql.20180822.tgz -C /apps/svr/rdp_syncer/base/rdp_mysql.20180822
 ```
 
-**上传文件**
+### 2.3 修改配置
 
 ```
-上传RDP打包文件rdp_mysql.20180822.tgz至/apps/svr/rdp_syncer/base
-```
-
-**RDP Syncer部署**
-
-```
-cd /apps/svr/rdp_syncer/base/
-mkdir rdp_mysql.20180822 && tar zxvf rdp_mysql.20180822.tgz -C rdp_mysql.20180822
 #拷贝配置文件
+mkdir -p /apps/svr/rdp_syncer/data/10001/conf
 cp /apps/svr/rdp_syncer/base/rdp_mysql.20180822/syncer.cfg.example /apps/svr/rdp_syncer/data/10001/conf/syncer.cfg
 #修改配置文件
-vim /apps/svr/rdp_syncer/data/10001/conf/syncer.cfg
+vi /apps/svr/rdp_syncer/data/10001/conf/syncer.cfg
 ```
 
 主要修改配置项：
@@ -84,7 +78,6 @@ vim /apps/svr/rdp_syncer/data/10001/conf/syncer.cfg
 | group.id                        | RDP集群ID                                          | 10001                                              |
 | syncer.host                     | RDP所在机器IP，用于标识RDP进程                     | 192.168.0.4                                        |
 | log.dir                         | 日志目录                                           | /apps/svr/rdp_syncer/data/10001/logs               |
-| binlog.dir                      | dump binlog目录                                    | /apps/svr/rdp_syncer/data/10001/binlogs            |
 | schema.meta.db.host             | schema store ip，可以与execute db相同              | 127.0.0.1                                          |
 | schema.meta.db.port             | schema store端口，可以与execute db相同             | 10001                                              |
 | schema.meta.db.user             | schema store用户名，可以与execute db相同           | \*\*\*                                             |
@@ -107,15 +100,10 @@ vim /apps/svr/rdp_syncer/data/10001/conf/syncer.cfg
 | compress.enable                 | 是否启用压缩                                       | 0                                                  |
 | metrics.file.dir                | metrics 目录                                       | /apps/svr/rdp_syncer/data/10001/metrics            |
 
-**启停RDP**
+### 2.4 启动RDP
 
 ```
 cd /apps/svr/rdp_syncer/base/rdp_mysql.20180822/bin
-#启动RDP
 ./start.sh 10001
-#将RDP加入到crontab
-./install.sh 10001
-#停止RDP并删除crontab
-./uninstall.sh 10001
 ```
 

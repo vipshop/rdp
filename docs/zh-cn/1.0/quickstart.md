@@ -33,107 +33,21 @@ RDP系统架构图如下：
 ## 3. 接入要求
 
 1.MySQL版本要求>=5.7.19, MariaDB>=10.0.21
-
-```
-# MySQL
-mysql> select @@version;
-+------------------+
-| @@version        |
-+------------------+
-| 5.7.17-debug-log |
-+------------------+
-1 row in set (0.00 sec)
-
-# MariaDB
-mysql> SELECT @@GLOBAL.VERSION;
-+---------------------+
-| @@GLOBAL.VERSION    |
-+---------------------+
-| 10.0.21-MariaDB-log |
-+---------------------+
-1 row in set (0.01 sec)
-```
-
-2.确保开始GTID(不开启GTID也可以，但在MySQL主从切换时可能存在丢数据情况)。MariaDB版本没有GTID_MODE项，不需要检查。
-
-```
-mysql> SELECT @@GLOBAL.GTID_MODE;
-+--------------------+
-| @@GLOBAL.GTID_MODE |
-+--------------------+
-| ON                 |
-+--------------------+
-1 row in set (0.00 sec)
-```
-
-3.确保开启Row格式LOG_BIN
-
-```
-mysql> SELECT @@GLOBAL.LOG_BIN;
-+------------------+
-| @@GLOBAL.LOG_BIN |
-+------------------+
-|                1 |
-+------------------+
-1 row in set (0.00 sec)
-```
-
+2.确保开始GTID
+3.确保开启Row格式binlog
 4.确保BINLOG_FORMAT为ROW格式
-
+5.确保BINLOG_ROW_IMAGE为FULL
+6.提供如下权限的用户:
 ```
-mysql> SELECT @@GLOBAL.BINLOG_FORMAT;
-+------------------------+
-| @@GLOBAL.BINLOG_FORMAT |
-+------------------------+
-| ROW                    |
-+------------------------+
-1 row in set (0.00 sec)
-```
-
-5.确保BINLOG_ROW_IMAGE为FULL。MariaDB版本没有BINLOG_ROW_IMAGE项，不需要检查。
-
-```
-mysql> SELECT @@GLOBAL.BINLOG_ROW_IMAGE;
-+---------------------------+
-| @@GLOBAL.BINLOG_ROW_IMAGE |
-+---------------------------+
-| FULL                      |
-+---------------------------+
-1 row in set (0.00 sec)
-```
-
-6.提供如下权限的用户
-
-```
-mysql> select Host, Select_priv, Execute_priv, Repl_slave_priv, Repl_client_priv, Show_view_priv, Event_priv from mysql.user where user='rdp'\G
-*************************** 1. row ***************************
-              Host: 10.%
-       Select_priv: Y
-      Execute_priv: Y
-    Repl_slave_priv: Y
-Repl_client_priv: Y
-    Show_view_priv: Y
-        Event_priv: Y
-1 rows in set (0.00 sec)
-
-# 如果没有相应权限用户可以通过一下语句创建
 GRANT SELECT, PROCESS, REPLICATION SLAVE, REPLICATION CLIENT, SHOW VIEW, EVENT ON *.* TO 'rdp'@'10.%' identified  by  ...;
-# 其中,  上述grant语句中"..."表示密码, 上述grant产生了一个具有拉取binlog权限的用户.
 ```
 
-## 4. 接入流程
-1.登录RDP OSS系统
+## 4. 快速上手
+执行以下命令，启动容器:
 
-2.点击“实例管理”
+```
+docker run -it firnsan/rdp
+```
+容器中已经包含RDP的二进制程序，路径在/apps/svr/rdp_syncer/base下。
+进入容器后，参照[部署文档](./rdp-deployment.md)中2.3和2.4小节，修改配置文件后启动进程。
 
-![oss_1](../1.0/pictures/oss_1.png)
-
-3.点击“实例申请”
-
-![oss_2](../1.0/pictures/oss_2.png)
-
-4.填写业务信息，业务DB信息
-
-![oss_3](../1.0/pictures/oss_3.png)
-
-5.联系RDP团队，RDP团队会与业务人员一起评估资源需求、部署方案、上线计划等。
