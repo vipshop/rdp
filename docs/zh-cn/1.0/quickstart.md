@@ -9,20 +9,20 @@ RDP同步数据库Binlog数据，经事务边界解析、Binlog翻译、过滤�
 RDP系统架构图如下：
 
 ![system_struct](../1.0/pictures/system_struct.png)
- - 数据源：RDP模拟Slave的同步方式，加入数据库的同步结构，既可以作为Master的Slave，也可以作为Slave的Slave。支持的数据库版本包括MySQL(version>5.7.19)，MariaDB(version>10.0.21).
- - Zookeeper：通过Zookeeper进行选主，在异常时自动进行主从切换，保证持续服务。定时记录同步进度，加快服务恢复。
+ - 数据源：RDP模拟Slave的同步方式，作为数据源的Slave拉取Binlog数据。
  - RDP：主从多节点模式，多线程并发解析Binlog，保证数据实时性。
- - Schema Store & Execute DB：Schema Store存储源数据库表结构镜像，Execute DB回放DML，每个RDP对应一个轻量级的数据库，用于回放Binlog中的DML，将Binlog对应的表结构存储于Schema Store，降低对Schema Store的操作。计算和存储分离，这样多个RDP共享一个高性能的Schema Store。
+ - Schema Store & Execute DB：Store DB用于存储源数据库表结构信息，最好是高可用的MySQL实例；Execute DB用于回放Binlog中的DDL，无需高可用。计算和存储分离，这样多个RDP共享一个高可用的Schema Store DB, 对于大规模RDP部署可以降低对MySQL实例的依赖。
+ - Zookeeper：RDP节点间通过Zookeeper进行选主，在RDP Leader异常时自动进行切换，保证持续服务。同时定时记录同步进度(checkpoint)到Zookeeper，加快服务恢复。
  - Kafka：RDP使用原生Kafka协议写到单个Topic单个Partition，保证数据顺序。(对于需要对分片数据库合并到一个Topic，建议不同分片数据库写到同一个Topic的不同Partition)。
 
 
 ## 2. RDP的应用场景
 
- - 数据同步：同步数据库Binlog数据，解析后写入VMS，业务消费VMS获取数据库增量数据。
+ - 数据同步：同步数据库Binlog数据，解析后写入Kafka，业务消费Kafka获取数据库增量数据。
 
 ![scenario_1](../1.0/pictures/scenario_1.png)
 
- - 事件通知：通过RDP同步增量数据库数据至VMS，业务消费VMS，获取DataBase/Table/Column/Value的变动情况。
+ - 事件通知：通过RDP同步增量数据库数据至Kafka，业务消费Kafka，获取DataBase/Table/Column/Value的变动情况。
 
 ![scenario_2](../1.0/pictures/scenario_2.png)
 
