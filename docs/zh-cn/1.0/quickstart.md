@@ -32,7 +32,7 @@ RDP系统架构图如下：
 
 ## 3. 接入要求
 
-1. MySQL版本要求>=5.7.19, MariaDB>=10.0.21
+1. MySQL版本要求>=5.7.17
 2. 确保开始GTID
 3. 确保开启Row格式binlog
 4. 确保BINLOG_FORMAT为ROW格式
