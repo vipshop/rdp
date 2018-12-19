@@ -28,8 +28,8 @@ RDP的全称是Real-Time Data Pipeline，是一个从MySQL同步数据到Kafka�
 * [赵百忠](https://github.com/firnsan)
 * [陈非](https://github.com/flike)
 * [范力彪](https://github.com/libiaofan)
+* [陈世旺](https://github.com/swung2)
 * 简怀兵
-* 陈世旺
 
 ## 帮助文档
 [点击查看](../../blob/master/docs/_sidebar.md)
