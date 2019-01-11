@@ -1,0 +1,43 @@
+version: '2.1'
+
+services:
+   source_db:
+     container_name: source_db
+     image: mysql:5.7.23
+     volumes:
+       - ./source_db_data:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: yourpassword
+     command: 
+       - --gtid-mode=ON 
+       - --enforce-gtid-consistency=1 
+       - --log-bin=bin
+       - --server-id=1
+
+   schema_db:
+     image: mysql:5.7.23
+     volumes:
+       - ./schema_db_data:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: yourpassword
+       MYSQL_DATABASE: db_rdp_schema
+
+
+   kafka:
+     container_name: kafka
+     image: spotify/kafka
+     restart: always
+
+   rdp:
+     container_name: rdp
+     depends_on:
+       - source_db
+       - schema_db
+       - kafka
+     image: firnsan/rdp
+     volumes:
+       - ./rdp_data:/apps/svr/rdp_syncer/data
+     restart: always
+     stdin_open: true

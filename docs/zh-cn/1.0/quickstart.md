@@ -42,12 +42,28 @@ GRANT SELECT, PROCESS, REPLICATION SLAVE, REPLICATION CLIENT, SHOW VIEW, EVENT O
 ```
 
 ## 4. 快速上手
-执行以下命令，启动容器:
+执行以下命令，启动源数据库、RDP、Kafka容器:
 
 ```
-docker run -it firnsan/rdp
+cd docker-compose && docker-compose up
 ```
-容器中已经包含RDP的二进制程序，路径在/apps/svr/rdp_syncer/base下。
+容器启动完成之后，进入到RDP容器:
+```
+docker exec -it rdp bash
+```
 
-进入容器后，参照[部署文档](./rdp-deployment.md)中2.3和2.4小节，修改配置文件后启动进程。
+进入容器之后，执行如下命令启动RDP进程:
+```
+cd /apps/svr/rdp_syncer/base/rdp_mysql/bin && ./start.sh 10000
+```
+
+RDP进程启动之后，在另一个终端执行以下命令，在源数据库执行SQL语句产生binlog:
+```
+docker exec -it source_db mysql -pyourpassword -Nse 'flush privileges'
+
+```
+
+此时可以查看RDP的输出，检查同步进度是否正常推进。
+
+
 
